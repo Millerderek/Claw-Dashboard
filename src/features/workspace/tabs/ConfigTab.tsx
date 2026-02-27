@@ -91,6 +91,7 @@ export function ConfigTab() {
       <div className="flex items-center border-b border-border/40">
         <div className="flex-1 px-2 py-1">
           <InlineSelect
+            inline
             value={selectedKey}
             onChange={(v) => {
               if (editing) {
