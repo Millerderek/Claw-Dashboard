@@ -11,8 +11,9 @@
 /** Mask a token for display, with a guard for short tokens. */
 // Show token in prompts so users can verify what they entered
 
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readdirSync, mkdirSync, copyFileSync, lstatSync } from 'node:fs';
+import { resolve, join } from 'node:path';
+import { homedir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
 import { input, password, confirm, select } from '@inquirer/prompts';
@@ -38,6 +39,8 @@ import { detectGatewayConfig, getEnvGatewayToken, restartGateway, approveAllPend
 
 const PROJECT_ROOT = resolve(process.cwd());
 const ENV_PATH = resolve(PROJECT_ROOT, '.env');
+const SKILLS_SRC = resolve(PROJECT_ROOT, 'skills');
+const SKILLS_DEST = resolve(homedir(), '.openclaw', 'workspace', 'skills');
 const TOTAL_SECTIONS = 6;
 
 const args = process.argv.slice(2);
@@ -145,6 +148,53 @@ process.on('SIGINT', () => {
   process.exit(130);
 });
 
+// ── Skill installation ───────────────────────────────────────────────
+
+function copyDirSync(src: string, dest: string): void {
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(src)) {
+    const srcPath = join(src, entry);
+    const destPath = join(dest, entry);
+    const stat = lstatSync(srcPath);
+    if (stat.isSymbolicLink()) continue;
+    if (stat.isDirectory()) {
+      copyDirSync(srcPath, destPath);
+    } else {
+      copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+function installBundledSkills(): void {
+  if (!existsSync(SKILLS_SRC)) return;
+
+  let installed = 0;
+  let entries: string[];
+  try {
+    entries = readdirSync(SKILLS_SRC);
+  } catch {
+    return;
+  }
+
+  for (const skillName of entries) {
+    try {
+      const skillSrc = join(SKILLS_SRC, skillName);
+      if (!lstatSync(skillSrc).isDirectory()) continue;
+      if (!existsSync(join(skillSrc, 'SKILL.md'))) continue;
+
+      const skillDest = join(SKILLS_DEST, skillName);
+      copyDirSync(skillSrc, skillDest);
+      installed++;
+    } catch (err) {
+      warn(`Failed to install skill "${skillName}": ${(err as Error).message}`);
+    }
+  }
+
+  if (installed > 0) {
+    success(`Installed ${installed} bundled skill${installed > 1 ? 's' : ''} to ${SKILLS_DEST}`);
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -241,6 +291,9 @@ async function main(): Promise<void> {
 
   console.log('');
   success('Configuration written to .env');
+
+  // Install bundled agent skills
+  installBundledSkills();
 
   printSummary(config);
 
@@ -1002,6 +1055,10 @@ async function runDefaults(existing: EnvConfig): Promise<void> {
   writeEnvFile(ENV_PATH, config);
 
   success('Configuration written to .env');
+
+  // Install bundled agent skills
+  installBundledSkills();
+
   printSummary(config);
 
   // Apply all gateway config patches silently (non-interactive = implicit consent)
