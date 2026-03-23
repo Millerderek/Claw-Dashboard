@@ -114,6 +114,20 @@ describe('authMiddleware', () => {
           expect(mockedVerifySession).not.toHaveBeenCalled();
         });
       }
+
+      it('keeps /api/auth/login public while protected API routes still require a session', async () => {
+        const app = createTestApp();
+
+        const loginRes = await app.request('/api/auth/login');
+        expect(loginRes.status).toBe(200);
+        expect(mockedVerifySession).not.toHaveBeenCalled();
+
+        const protectedRes = await app.request('/api/test');
+        expect(protectedRes.status).toBe(401);
+        const body = (await protectedRes.json()) as { error: string };
+        expect(body.error).toBe('Authentication required');
+        expect(mockedVerifySession).not.toHaveBeenCalled();
+      });
     });
 
     describe('non-API routes pass through (SPA/static)', () => {
