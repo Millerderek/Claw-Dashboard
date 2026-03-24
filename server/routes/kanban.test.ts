@@ -1535,6 +1535,7 @@ describe('POST /api/kanban/tasks/:id/complete — run key integrity', () => {
     expect(latest?.run?.sessionKey).toBe(run2.run?.sessionKey);
     expect(latest?.result).toBeUndefined();
   });
+
 });
 
 // ── Full workflow through HTTP ───────────────────────────────────────

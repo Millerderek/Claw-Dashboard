@@ -114,9 +114,16 @@ function pollSessionCompletion(
     }
 
     try {
-      // Check if task is still in-progress before polling
+      // Stop stale pollers once the task leaves this active run.
       const task = await store.getTask(taskId).catch(() => null);
-      if (!task || task.status !== 'in-progress') return; // task was moved/aborted, stop
+      if (
+        !task
+        || task.status !== 'in-progress'
+        || task.run?.status !== 'running'
+        || task.run?.sessionKey !== identity.correlationKey
+      ) {
+        return; // task was moved, aborted, or rerun under a newer session key
+      }
 
       const raw = await invokeGatewayTool('subagents', { action: 'list', recentMinutes: 120 });
       const parsed = parseGatewayResponse(raw);

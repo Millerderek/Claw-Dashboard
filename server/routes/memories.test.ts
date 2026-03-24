@@ -93,6 +93,10 @@ describe('memories routes', () => {
     throw new Error(`Timed out waiting for broadcast. Calls: ${JSON.stringify(broadcastMock.mock.calls)}`);
   }
 
+  async function allowWatcherToSettle() {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
   describe('GET /api/memories', () => {
     it('returns empty array when no memories exist', async () => {
       const app = await buildApp();
@@ -390,6 +394,7 @@ describe('memories routes', () => {
       const { startFileWatcher, stopFileWatcher } = await loadFileWatcher();
 
       startFileWatcher();
+      await allowWatcherToSettle();
       await fs.writeFile(memoryPath, '# MEMORY.md\n\n## Facts\n- Updated\n');
 
       await waitForBroadcast(([event, payload]) => (
@@ -417,6 +422,7 @@ describe('memories routes', () => {
       const { startFileWatcher, stopFileWatcher } = await loadFileWatcher();
 
       startFileWatcher();
+      await allowWatcherToSettle();
       await fs.writeFile(dailyPath, '## Morning\n- Updated\n');
 
       await waitForBroadcast(([event, payload]) => (
@@ -444,6 +450,7 @@ describe('memories routes', () => {
       const { startFileWatcher, stopFileWatcher } = await loadFileWatcher();
 
       startFileWatcher();
+      await allowWatcherToSettle();
       await fs.writeFile(researchMemoryPath, '# MEMORY.md\n\n## Facts\n- Research update\n');
 
       await waitForBroadcast(([event, payload]) => (
@@ -473,6 +480,7 @@ describe('memories routes', () => {
       const { startFileWatcher, stopFileWatcher } = await loadFileWatcher();
 
       startFileWatcher();
+      await allowWatcherToSettle();
       await fs.writeFile(researchDailyPath, '## Morning\n- Updated\n');
 
       await waitForBroadcast(([event, payload]) => (
