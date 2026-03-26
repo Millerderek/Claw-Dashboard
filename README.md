@@ -1,8 +1,3 @@
-<div align="center">
-
-<img src="docs/nerve-logo-animated.svg" alt="Nerve" width="200" />
-
-# Nerve
 
 **The cockpit OpenClaw deserves.**
 
