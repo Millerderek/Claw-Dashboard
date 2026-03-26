@@ -130,6 +130,15 @@ export function setupWebSocketProxy(server: HttpServer | HttpsServer): void {
       return;
     }
 
+    // Only allow connections to the configured gateway port
+    const gwUrl = new URL(config.gatewayUrl.replace(/^http/, 'ws'));
+    const allowedPort = Number(gwUrl.port) || (gwUrl.protocol === 'wss:' ? 443 : 80);
+    if (targetPort !== allowedPort) {
+      console.warn(`${tag} Rejected: port ${targetPort} does not match gateway port ${allowedPort}`);
+      clientWs.close(1008, 'Target port not allowed');
+      return;
+    }
+
     const isEncrypted = !!(req.socket as unknown as { encrypted?: boolean }).encrypted;
     const scheme = isEncrypted ? 'https' : 'http';
     const clientOrigin = (Array.isArray(req.headers.origin) ? req.headers.origin[0] : req.headers.origin)
@@ -259,8 +268,13 @@ function createGatewayRelay(
     clearChallengeTimer();
 
     let modified = savedConnectMsg;
-    // Inject gateway token proxy-side for trusted clients if not provided by browser
-    if (isTrusted && config.gatewayToken && !(modified.params as ConnectParams)?.auth?.token) {
+    // Inject gateway token proxy-side for trusted clients if not provided by browser.
+    // Only inject when the target actually matches the configured gateway (hostname + port).
+    const gwCheck = new URL(config.gatewayUrl.replace(/^http/, 'ws'));
+    const gwPort = Number(gwCheck.port) || (gwCheck.protocol === 'wss:' ? 443 : 80);
+    const tgtPort = Number(targetUrl.port) || (targetUrl.protocol === 'wss:' ? 443 : 80);
+    const isGatewayTarget = targetUrl.hostname === gwCheck.hostname && tgtPort === gwPort;
+    if (isGatewayTarget && isTrusted && config.gatewayToken && !(modified.params as ConnectParams)?.auth?.token) {
       modified = {
         ...modified,
         params: {

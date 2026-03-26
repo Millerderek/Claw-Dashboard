@@ -768,13 +768,15 @@ app.get('/api/files/raw', async (c) => {
     }
 
     const buffer = await fs.readFile(resolved);
-    return new Response(buffer, {
-      headers: {
-        'Content-Type': mime,
-        'Content-Length': String(stat.size),
-        'Cache-Control': 'no-cache',
-      },
-    });
+    const headers: Record<string, string> = {
+      'Content-Type': mime,
+      'Content-Length': String(stat.size),
+      'Cache-Control': 'no-cache',
+    };
+    if (mime === 'image/svg+xml') {
+      headers['Content-Disposition'] = 'attachment';
+    }
+    return new Response(buffer, { headers });
   } catch {
     return c.json({ ok: false, error: 'Failed to read file' }, 500);
   }

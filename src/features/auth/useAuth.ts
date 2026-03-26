@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useSyncExternalStore } from 'react';
 
-export type AuthState = 'loading' | 'authenticated' | 'login';
+export type AuthState = 'loading' | 'authenticated' | 'login' | 'pending';
 
 /** Minimal external store so the initial auth check doesn't trigger cascading renders. */
 let authSnapshot: AuthState = 'loading';
@@ -23,7 +23,7 @@ const getSnapshot = () => authSnapshot;
 fetch('/api/auth/status')
   .then(r => r.json())
   .then(data => setAuthSnapshot(!data.authEnabled || data.authenticated ? 'authenticated' : 'login'))
-  .catch(() => setAuthSnapshot('authenticated'));
+  .catch(() => setAuthSnapshot('pending'));
 
 export function useAuth() {
   const state = useSyncExternalStore(subscribe, getSnapshot);

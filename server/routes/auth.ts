@@ -44,7 +44,7 @@ app.post('/api/auth/login', rateLimitAuth, async (c) => {
 
   try {
     const body = await c.req.json() as { password?: string };
-    const password = body.password?.trim();
+    const password = body.password;
 
     if (!password) {
       return c.json({ error: 'Password required' }, 400);

@@ -38,10 +38,10 @@ const normalizeModel = (m: string) => m.trim() || '--';
 // sessionStorage is cleared when the browser tab closes, reducing exposure if
 // the device is shared or left unattended. localStorage persists indefinitely.
 function loadConfig() {
-  try { return JSON.parse(localStorage.getItem('oc-config') || '{}'); } catch { return {}; }
+  try { return JSON.parse(sessionStorage.getItem('oc-config') || '{}'); } catch { return {}; }
 }
 function saveConfig(url: string, token: string) {
-  localStorage.setItem('oc-config', JSON.stringify({ url, token }));
+  sessionStorage.setItem('oc-config', JSON.stringify({ url, token }));
 }
 
 export function GatewayProvider({ children }: { children: ReactNode }) {

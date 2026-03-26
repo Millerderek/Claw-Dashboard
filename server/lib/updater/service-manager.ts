@@ -3,7 +3,7 @@
  * Detection order: systemd first, then launchd.
  */
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import type { ServiceManager } from './types.js';
 
 // ── Systemd adapter ──────────────────────────────────────────────────
@@ -15,7 +15,7 @@ class SystemdManager implements ServiceManager {
 
   detect(): boolean {
     try {
-      execSync('systemctl --version', { stdio: 'pipe' });
+      execFileSync('systemctl', ['--version'], { stdio: 'pipe' });
     } catch {
       return false;
     }
@@ -39,16 +39,18 @@ class SystemdManager implements ServiceManager {
   }
 
   async restart(): Promise<void> {
-    const flag = this.isUserUnit ? '--user ' : '';
-    execSync(`systemctl ${flag}restart ${this.unit}`.trim(), { stdio: 'pipe' });
+    const args = this.isUserUnit
+      ? ['--user', 'restart', this.unit]
+      : ['restart', this.unit];
+    execFileSync('systemctl', args, { stdio: 'pipe' });
   }
 
   async isActive(): Promise<boolean> {
     try {
-      const flag = this.isUserUnit ? '--user ' : '';
-      const result = execSync(`systemctl ${flag}is-active ${this.unit}`.trim(), {
-        stdio: 'pipe',
-      })
+      const args = this.isUserUnit
+        ? ['--user', 'is-active', this.unit]
+        : ['is-active', this.unit];
+      const result = execFileSync('systemctl', args, { stdio: 'pipe' })
         .toString()
         .trim();
       return result === 'active';
@@ -59,11 +61,10 @@ class SystemdManager implements ServiceManager {
 
   async getLogs(lines: number): Promise<string> {
     try {
-      const flag = this.isUserUnit ? '--user ' : '';
-      return execSync(
-        `journalctl ${flag}-u ${this.unit} -n ${lines} --no-pager`.trim(),
-        { stdio: 'pipe' },
-      ).toString();
+      const args = this.isUserUnit
+        ? ['--user', '-u', this.unit, '-n', String(lines), '--no-pager']
+        : ['-u', this.unit, '-n', String(lines), '--no-pager'];
+      return execFileSync('journalctl', args, { stdio: 'pipe' }).toString();
     } catch {
       return '';
     }
@@ -71,11 +72,10 @@ class SystemdManager implements ServiceManager {
 
   private findUnit(user: boolean): string | null {
     try {
-      const flag = user ? '--user ' : '';
-      const output = execSync(
-        `systemctl ${flag}list-units --type=service --all --no-legend`.trim(),
-        { stdio: 'pipe' },
-      ).toString();
+      const args = user
+        ? ['--user', 'list-units', '--type=service', '--all', '--no-legend']
+        : ['list-units', '--type=service', '--all', '--no-legend'];
+      const output = execFileSync('systemctl', args, { stdio: 'pipe' }).toString();
 
       for (const line of output.split('\n')) {
         if (/nerve/i.test(line)) {
@@ -100,7 +100,7 @@ class LaunchdManager implements ServiceManager {
     if (process.platform !== 'darwin') return false;
 
     try {
-      const output = execSync('launchctl list', { stdio: 'pipe' }).toString();
+      const output = execFileSync('launchctl', ['list'], { stdio: 'pipe' }).toString();
       for (const line of output.split('\n')) {
         if (/nerve/i.test(line)) {
           const parts = line.trim().split(/\s+/);
@@ -119,23 +119,23 @@ class LaunchdManager implements ServiceManager {
   }
 
   async restart(): Promise<void> {
-    const uid = execSync('id -u', { stdio: 'pipe' }).toString().trim();
+    const uid = execFileSync('id', ['-u'], { stdio: 'pipe' }).toString().trim();
     try {
-      execSync(`launchctl kickstart -k gui/${uid}/${this.label}`, { stdio: 'pipe' });
+      execFileSync('launchctl', ['kickstart', '-k', `gui/${uid}/${this.label}`], { stdio: 'pipe' });
     } catch {
       // Fallback to stop + start
       try {
-        execSync(`launchctl stop ${this.label}`, { stdio: 'pipe' });
+        execFileSync('launchctl', ['stop', this.label], { stdio: 'pipe' });
       } catch {
         // may already be stopped
       }
-      execSync(`launchctl start ${this.label}`, { stdio: 'pipe' });
+      execFileSync('launchctl', ['start', this.label], { stdio: 'pipe' });
     }
   }
 
   async isActive(): Promise<boolean> {
     try {
-      const output = execSync('launchctl list', { stdio: 'pipe' }).toString();
+      const output = execFileSync('launchctl', ['list'], { stdio: 'pipe' }).toString();
       for (const line of output.split('\n')) {
         if (line.includes(this.label)) {
           const pid = line.trim().split(/\s+/)[0];
@@ -150,10 +150,11 @@ class LaunchdManager implements ServiceManager {
 
   async getLogs(lines: number): Promise<string> {
     try {
-      return execSync(
-        `log show --predicate 'processImagePath contains "nerve"' --last 5m --info | tail -${lines}`,
+      return execFileSync(
+        'log',
+        ['show', '--predicate', 'processImagePath contains "nerve"', '--last', '5m', '--info'],
         { stdio: 'pipe' },
-      ).toString();
+      ).toString().split('\n').slice(-lines).join('\n');
     } catch {
       return '';
     }
