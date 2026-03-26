@@ -2,7 +2,7 @@
  * Git checkout + npm install + build.
  */
 
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { EXIT_CODES, UpdateError } from './types.js';
 
 const EXEC_TIMEOUT = 300_000; // 5 minutes
@@ -12,7 +12,7 @@ const EXEC_TIMEOUT = 300_000; // 5 minutes
  */
 export function gitFetchAndCheckout(cwd: string, tag: string): void {
   try {
-    execSync('git fetch --tags origin', { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
+    execFileSync('git', ['fetch', '--tags', 'origin'], { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
   } catch (err) {
     throw new UpdateError(
       `git fetch failed: ${errorMessage(err)}`,
@@ -22,7 +22,7 @@ export function gitFetchAndCheckout(cwd: string, tag: string): void {
   }
 
   try {
-    execSync(`git checkout --force ${tag}`, { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
+    execFileSync('git', ['checkout', '--force', tag], { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
   } catch (err) {
     throw new UpdateError(
       `git checkout ${tag} failed: ${errorMessage(err)}`,
@@ -37,7 +37,7 @@ export function gitFetchAndCheckout(cwd: string, tag: string): void {
  */
 export function gitCheckoutLocal(cwd: string, ref: string): void {
   try {
-    execSync(`git checkout --force ${ref}`, { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
+    execFileSync('git', ['checkout', '--force', ref], { cwd, stdio: 'pipe', timeout: EXEC_TIMEOUT });
   } catch (err) {
     throw new UpdateError(
       `git checkout ${ref} failed: ${errorMessage(err)}`,
