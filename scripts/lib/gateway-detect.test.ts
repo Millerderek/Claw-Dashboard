@@ -41,13 +41,13 @@ describe('gateway detection and repair', () => {
     vi.resetModules();
     tempHome = mkdtempSync(path.join(os.tmpdir(), 'nerve-gateway-detect-'));
     process.env.HOME = tempHome;
-    process.env.NERVE_DATA_DIR = path.join(tempHome, '.nerve');
+    process.env.CLAWDASH_DATA_DIR = path.join(tempHome, '.clawdash');
     delete process.env.OPENCLAW_GATEWAY_TOKEN;
 
     mkdirSync(path.join(tempHome, '.openclaw', 'devices'), { recursive: true });
     mkdirSync(path.join(tempHome, '.openclaw', 'identity'), { recursive: true });
     mkdirSync(path.join(tempHome, '.openclaw'), { recursive: true });
-    mkdirSync(path.join(tempHome, '.nerve'), { recursive: true });
+    mkdirSync(path.join(tempHome, '.clawdash'), { recursive: true });
 
     writeFileSync(path.join(tempHome, '.openclaw', 'openclaw.json'), JSON.stringify({
       gateway: {
@@ -60,7 +60,7 @@ describe('gateway detection and repair', () => {
       },
     }, null, 2));
 
-    writeFileSync(path.join(tempHome, '.nerve', 'device-identity.json'), JSON.stringify({
+    writeFileSync(path.join(tempHome, '.clawdash', 'device-identity.json'), JSON.stringify({
       deviceId: 'nerve-device',
       publicKeyB64url: 'nerve-public-key',
     }, null, 2));
@@ -79,7 +79,7 @@ describe('gateway detection and repair', () => {
       'nerve-device': {
         deviceId: 'nerve-device',
         scopes: FULL_OPERATOR_SCOPES,
-        displayName: 'Nerve UI',
+        displayName: 'ClawDash UI',
         platform: 'web',
         clientId: 'webchat-ui',
         clientMode: 'webchat',
@@ -224,7 +224,7 @@ describe('gateway detection and repair', () => {
     });
   });
 
-  it('approves only the pending request that matches Nerve and leaves unrelated requests untouched', async () => {
+  it('approves only the pending request that matches ClawDash and leaves unrelated requests untouched', async () => {
     const execSyncMock = vi.fn((command: string) => {
       if (command.includes('devices list --json')) {
         return Buffer.from(JSON.stringify({
@@ -233,7 +233,7 @@ describe('gateway detection and repair', () => {
               requestId: 'req-nerve',
               deviceId: 'nerve-device',
               publicKey: 'nerve-public-key',
-              displayName: 'Nerve UI',
+              displayName: 'ClawDash UI',
             },
             {
               requestId: 'req-other',
@@ -253,7 +253,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -280,7 +280,7 @@ describe('gateway detection and repair', () => {
               requestId: 'req-nerve; rm -rf /',
               deviceId: 'nerve-device',
               publicKey: 'nerve-public-key',
-              displayName: 'Nerve UI',
+              displayName: 'ClawDash UI',
             },
           ],
         }));
@@ -290,7 +290,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -303,18 +303,18 @@ describe('gateway detection and repair', () => {
     );
   });
 
-  it('does not approve any pending request when Nerve cannot be identified safely', async () => {
+  it('does not approve any pending request when ClawDash cannot be identified safely', async () => {
     const execSyncMock = vi.fn((command: string) => {
       if (command.includes('devices list --json')) {
         return Buffer.from(JSON.stringify({
           pending: [
             {
               requestId: 'req-a',
-              displayName: 'Nerve UI',
+              displayName: 'ClawDash UI',
             },
             {
               requestId: 'req-b',
-              displayName: 'Nerve UI',
+              displayName: 'ClawDash UI',
             },
           ],
         }));
@@ -324,7 +324,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -353,7 +353,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -366,7 +366,7 @@ describe('gateway detection and repair', () => {
     );
   });
 
-  it('fails closed when a pending request matches only one of Nerve\'s known identifiers', async () => {
+  it('fails closed when a pending request matches only one of ClawDash\'s known identifiers', async () => {
     const execSyncMock = vi.fn((command: string) => {
       if (command.includes('devices list --json')) {
         return Buffer.from(JSON.stringify({
@@ -375,7 +375,7 @@ describe('gateway detection and repair', () => {
               requestId: 'req-partial',
               deviceId: 'nerve-device',
               publicKey: 'wrong-public-key',
-              displayName: 'Nerve UI',
+              displayName: 'ClawDash UI',
             },
             {
               requestId: 'req-other',
@@ -391,7 +391,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -414,7 +414,7 @@ describe('gateway detection and repair', () => {
     });
 
     const { mod } = await importGatewayDetect();
-    const result = mod.approvePendingNerveDevice({
+    const result = mod.approvePendingClawDashDevice({
       exec: execSyncMock,
     });
 
@@ -427,7 +427,7 @@ describe('gateway detection and repair', () => {
     );
   });
 
-  it('repairs only the Nerve paired device record and preserves unrelated devices', async () => {
+  it('repairs only the ClawDash paired device record and preserves unrelated devices', async () => {
     writeFileSync(path.join(tempHome, '.openclaw', 'devices', 'paired.json'), JSON.stringify({
       'gateway-device': {
         deviceId: 'gateway-device',
@@ -437,7 +437,7 @@ describe('gateway detection and repair', () => {
       'nerve-device': {
         deviceId: 'nerve-device',
         scopes: ['operator.read'],
-        displayName: 'Nerve UI',
+        displayName: 'ClawDash UI',
         platform: 'web',
         clientId: 'webchat-ui',
         clientMode: 'webchat',
@@ -503,7 +503,7 @@ describe('gateway detection and repair', () => {
       'nerve-device': {
         deviceId: 'nerve-device',
         scopes: FULL_OPERATOR_SCOPES,
-        displayName: 'Nerve UI',
+        displayName: 'ClawDash UI',
         platform: 'web',
         clientId: 'webchat-ui',
         clientMode: 'webchat',
@@ -539,7 +539,7 @@ describe('gateway detection and repair', () => {
       'nerve-device': {
         deviceId: 'nerve-device',
         scopes: FULL_OPERATOR_SCOPES,
-        displayName: 'Nerve UI',
+        displayName: 'ClawDash UI',
         platform: 'web',
         clientId: 'webchat-ui',
         clientMode: 'webchat',
@@ -580,7 +580,7 @@ describe('gateway detection and repair', () => {
       'nerve-device': {
         deviceId: 'nerve-device',
         scopes: FULL_OPERATOR_SCOPES,
-        displayName: 'Nerve UI',
+        displayName: 'ClawDash UI',
         platform: 'web',
         clientId: 'webchat-ui',
         clientMode: 'webchat',

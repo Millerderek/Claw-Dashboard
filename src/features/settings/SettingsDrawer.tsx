@@ -45,7 +45,7 @@ interface SettingsDrawerProps {
 type SettingsCategory = 'advanced' | 'audio' | 'appearance';
 type LegacySettingsCategory = SettingsCategory | 'audio-input' | 'voice-output';
 
-const SETTINGS_CATEGORY_KEY = 'nerve:settings-category';
+const SETTINGS_CATEGORY_KEY = 'clawdash:settings-category';
 
 function normalizeSavedCategory(value: string | null): SettingsCategory | null {
   const raw = value as LegacySettingsCategory | null;
@@ -274,7 +274,7 @@ export function SettingsDrawer({
             </button>
           )}
           <div className="flex items-center justify-between gap-3 px-1 text-[0.733rem] text-muted-foreground/70">
-            <span>OpenClaw Nerve</span>
+            <span>ClawDash</span>
             <span className="font-mono text-[0.667rem] tracking-[0.08em]">v{__APP_VERSION__}</span>
           </div>
         </div>

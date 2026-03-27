@@ -1,5 +1,5 @@
 /**
- * Nerve Updater — barrel export.
+ * ClawDash Updater — barrel export.
  */
 
 export { orchestrate } from './orchestrator.js';

@@ -1,15 +1,15 @@
 ---
-name: nerve-kanban
-description: Interact with the Nerve Kanban board API. CRUD tasks, manage workflow (execute, approve, reject, abort), handle proposals, configure the board. All endpoints are under /api/kanban on the Nerve server.
+name: clawdash-kanban
+description: Interact with the ClawDash Kanban board API. CRUD tasks, manage workflow (execute, approve, reject, abort), handle proposals, configure the board. All endpoints are under /api/kanban on the ClawDash server.
 ---
 
-# Nerve Kanban API Skill
+# ClawDash Kanban API Skill
 
-Use this skill to manage tasks on the Nerve Kanban board via its REST API.
+Use this skill to manage tasks on the ClawDash Kanban board via its REST API.
 
 ## Base URL
 
-All endpoints are relative to the Nerve server origin (e.g. `http://localhost:3000`). Prefix every path with `/api/kanban`.
+All endpoints are relative to the ClawDash server origin (e.g. `http://localhost:3000`). Prefix every path with `/api/kanban`.
 
 ## Core Concepts
 

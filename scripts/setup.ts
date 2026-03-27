@@ -1,5 +1,5 @@
 /**
- * Interactive setup wizard for Nerve.
+ * Interactive setup wizard for ClawDash.
  * Guides users through first-time configuration.
  *
  * Usage:
@@ -36,7 +36,7 @@ import {
   type EnvConfig,
 } from './lib/env-writer.js';
 import { generateSelfSignedCert } from './lib/cert-gen.js';
-import { detectGatewayConfig, getEnvGatewayToken, chooseSetupGatewayToken, restartGateway, approvePendingNerveDevice, detectNeededConfigChanges, type ConfigChange } from './lib/gateway-detect.js';
+import { detectGatewayConfig, getEnvGatewayToken, chooseSetupGatewayToken, restartGateway, approvePendingClawDashDevice, detectNeededConfigChanges, type ConfigChange } from './lib/gateway-detect.js';
 import { applyAccessPlanToConfig, buildAccessPlan, type InstallerAccessProfile } from './lib/access-plan.js';
 import { getTailscaleState, type TailscaleState } from './lib/tailscale.js';
 import { detectAgentDisplayNameDefault } from './lib/agent-name-default.js';
@@ -133,7 +133,7 @@ async function applyConfigChanges(changes: ConfigChange[]): Promise<void> {
     if (restart.ok) {
       await new Promise(r => setTimeout(r, 3000));
       if (shouldApprovePending) {
-        const approved = approvePendingNerveDevice();
+        const approved = approvePendingClawDashDevice();
         if (approved.ok && approved.approved > 0) {
           success(approved.message);
         } else if (!approved.ok) {
@@ -239,13 +239,13 @@ async function main(): Promise<void> {
     return;
   }
 
-  printBanner(); // no-ops when NERVE_INSTALLER is set
+  printBanner(); // no-ops when CLAWDASH_INSTALLER is set
 
   // Clean up stale .env.tmp from previous interrupted runs
   cleanupTmp(ENV_PATH);
 
   // Prerequisite checks (skip verbose output when called from installer — already checked)
-  const prereqs = checkPrerequisites({ quiet: !!process.env.NERVE_INSTALLER });
+  const prereqs = checkPrerequisites({ quiet: !!process.env.CLAWDASH_INSTALLER });
   if (!prereqs.nodeOk) {
     console.log('');
     fail('Node.js ≥ 22 is required. Please upgrade and try again.');
@@ -276,7 +276,7 @@ async function main(): Promise<void> {
 
   // If .env exists, ask whether to update or start fresh
   // (Skip this when called from install.sh — the installer already asked)
-  if (hasExisting && existing.GATEWAY_TOKEN && !process.env.NERVE_INSTALLER) {
+  if (hasExisting && existing.GATEWAY_TOKEN && !process.env.CLAWDASH_INSTALLER) {
     const action = await select({
     theme: promptTheme,
       message: 'What would you like to do?',
@@ -314,7 +314,7 @@ async function main(): Promise<void> {
   printSummary(config);
 
   // When invoked from install.sh, build is already done — skip misleading "next steps"
-  if (!process.env.NERVE_INSTALLER) {
+  if (!process.env.CLAWDASH_INSTALLER) {
     printNextSteps(config);
   }
 }
@@ -330,7 +330,7 @@ async function collectInteractive(
   // ── 1/5: Gateway Connection ──────────────────────────────────────
 
   section(1, TOTAL_SECTIONS, 'Gateway Connection');
-  dim('Nerve connects to your OpenClaw gateway.');
+  dim('ClawDash connects to your OpenClaw gateway.');
   dim('Make sure the gateway is running before continuing.');
   console.log('');
 
@@ -416,7 +416,7 @@ async function collectInteractive(
 
   // Test connection
   const rail = `  \x1b[2m│\x1b[0m`;
-  const testPrefix = process.env.NERVE_INSTALLER ? `${rail}  ` : '  ';
+  const testPrefix = process.env.CLAWDASH_INSTALLER ? `${rail}  ` : '  ';
   process.stdout.write(`${testPrefix}Testing connection... `);
   const gwTest = await testGatewayConnection(config.GATEWAY_URL!, config.GATEWAY_TOKEN);
   if (gwTest.ok) {
@@ -440,7 +440,7 @@ async function collectInteractive(
 
   // ── 3/5: Access Mode ──────────────────────────────────────────────
 
-  section(3, TOTAL_SECTIONS, 'How will you access Nerve?');
+  section(3, TOTAL_SECTIONS, 'How will you access ClawDash?');
 
   const accessChoices: { name: string; value: AccessMode; description: string }[] = [
     { name: 'This machine only (localhost)', value: 'local', description: 'Safest, only accessible from this computer' },
@@ -454,7 +454,7 @@ async function collectInteractive(
     {
       name: prereqs.tailscale.dnsName ? `Via Tailscale Serve (${prereqs.tailscale.dnsName})` : 'Via Tailscale Serve',
       value: 'tailscale-serve',
-      description: 'Private by default, Nerve stays on 127.0.0.1 and is exposed through *.ts.net',
+      description: 'Private by default, ClawDash stays on 127.0.0.1 and is exposed through *.ts.net',
     },
     { name: 'From other devices on my network', value: 'network', description: 'Opens to LAN, you may need to configure your firewall' },
     { name: 'Custom setup (I know what I\'m doing)', value: 'custom', description: 'Manual port, bind address, HTTPS, CORS configuration' },
@@ -462,7 +462,7 @@ async function collectInteractive(
 
   const accessMode = await select<AccessMode>({
     theme: promptTheme,
-    message: 'How will you connect to Nerve?',
+    message: 'How will you connect to ClawDash?',
     choices: accessChoices,
   });
 
@@ -492,7 +492,7 @@ async function collectInteractive(
     });
 
     if (!enableHttps) {
-      dim('Voice input will only work when accessing Nerve from localhost');
+      dim('Voice input will only work when accessing ClawDash from localhost');
       return undefined;
     }
 
@@ -588,7 +588,7 @@ async function collectInteractive(
 
   if (accessMode === 'local') {
     accessPlan = buildAccessPlan({ profile: 'local', port });
-    success(`Nerve will be available at http://localhost:${port}`);
+    success(`ClawDash will be available at http://localhost:${port}`);
 
   } else if (accessMode === 'tailscale-ip') {
     tailscaleState = await ensureInteractiveTailscale();
@@ -599,7 +599,7 @@ async function collectInteractive(
       console.log('');
       process.exit(1);
     }
-    success(`Nerve will be available at ${accessPlan.browserOrigins[0]}`);
+    success(`ClawDash will be available at ${accessPlan.browserOrigins[0]}`);
     dim('Accessible from any device on your Tailscale network');
 
   } else if (accessMode === 'tailscale-serve') {
@@ -674,8 +674,8 @@ async function collectInteractive(
 
       success(`Falling back to tailnet IP access at ${accessPlan.browserOrigins[0]}`);
     } else {
-      success(`Nerve will be available at ${accessPlan.browserOrigins[0]}`);
-      dim('Nerve will stay private on 127.0.0.1 and be reached through Tailscale Serve');
+      success(`ClawDash will be available at ${accessPlan.browserOrigins[0]}`);
+      dim('ClawDash will stay private on 127.0.0.1 and be reached through Tailscale Serve');
     }
 
   } else if (accessMode === 'network') {
@@ -693,7 +693,7 @@ async function collectInteractive(
     const ip = lanIp.trim();
     sslPort = await offerHttpsSetup(ip);
     accessPlan = buildAccessPlan({ profile: 'network', port, remoteHost: ip, sslPort });
-    success(`Nerve will be available at http://${ip}:${port}`);
+    success(`ClawDash will be available at http://${ip}:${port}`);
     dim(`Make sure your firewall allows traffic on port ${port}`);
     dim('Need access from multiple devices? Add more origins to ALLOWED_ORIGINS in .env');
 
@@ -723,7 +723,7 @@ async function collectInteractive(
     }
 
     accessPlan = buildAccessPlan({ profile: 'custom', port, remoteHost: customHost, sslPort });
-    success(`Nerve will be available at http://${customHost}:${port}`);
+    success(`ClawDash will be available at http://${customHost}:${port}`);
   }
 
   delete config.ALLOWED_ORIGINS;
@@ -742,7 +742,7 @@ async function collectInteractive(
 
   if (neededChanges.length > 0) {
     console.log('');
-    warn('Nerve needs to update your OpenClaw gateway config.');
+    warn('ClawDash needs to update your OpenClaw gateway config.');
     dim('OpenClaw config files will be updated.');
     console.log('');
     dim('The following changes are needed:');
@@ -765,7 +765,7 @@ async function collectInteractive(
         if (change.id === 'device-scopes') {
           dim('  • Device scopes: manually fix scopes in ~/.openclaw/devices/paired.json');
         } else if (change.id === 'pre-pair') {
-          dim('  • Pre-pair: run `openclaw devices approve` after starting Nerve');
+          dim('  • Pre-pair: run `openclaw devices approve` after starting ClawDash');
         } else if (change.id === 'tools-allow') {
           dim('  • HTTP tools: add "cron", "gateway", and "sessions_spawn" to gateway.tools.allow in ~/.openclaw/openclaw.json');
         } else if (change.id.startsWith('allowed-origins')) {
@@ -778,21 +778,21 @@ async function collectInteractive(
   // ── 4/6: Authentication ───────────────────────────────────────────
 
   // Always generate a session secret if not already set
-  if (!config.NERVE_SESSION_SECRET) {
-    config.NERVE_SESSION_SECRET = randomBytes(32).toString('hex');
+  if (!config.CLAWDASH_SESSION_SECRET) {
+    config.CLAWDASH_SESSION_SECRET = randomBytes(32).toString('hex');
   }
 
   const isNetworkExposed = config.HOST === '0.0.0.0';
 
   if (isNetworkExposed) {
     section(4, TOTAL_SECTIONS, 'Authentication');
-    warn('Your access mode exposes Nerve to the network.');
+    warn('Your access mode exposes ClawDash to the network.');
     dim('Without a password, anyone on your network can access all endpoints.');
     console.log('');
 
     const setPassword = await confirm({
       theme: promptTheme,
-      message: 'Set a password for Nerve access? (recommended)',
+      message: 'Set a password for ClawDash access? (recommended)',
       default: true,
     });
 
@@ -825,14 +825,14 @@ async function collectInteractive(
             resolve(`${salt.toString('hex')}:${derivedKey.toString('hex')}`);
           });
         });
-        config.NERVE_PASSWORD_HASH = hash;
-        config.NERVE_AUTH = 'true';
+        config.CLAWDASH_PASSWORD_HASH = hash;
+        config.CLAWDASH_AUTH = 'true';
         success('Password set. Authentication will be enabled.');
       }
     } else {
       // No password, but still enable auth if gateway token exists
       if (config.GATEWAY_TOKEN) {
-        config.NERVE_AUTH = 'true';
+        config.CLAWDASH_AUTH = 'true';
         success('Authentication enabled — your gateway token can be used as a password.');
       } else {
         warn('No password set and no gateway token. Authentication disabled.');
@@ -841,10 +841,10 @@ async function collectInteractive(
     }
   } else {
     // Localhost — skip auth setup, but preserve existing auth config
-    if (existing.NERVE_AUTH) config.NERVE_AUTH = existing.NERVE_AUTH;
-    if (existing.NERVE_PASSWORD_HASH) config.NERVE_PASSWORD_HASH = existing.NERVE_PASSWORD_HASH;
-    if (existing.NERVE_SESSION_SECRET) config.NERVE_SESSION_SECRET = existing.NERVE_SESSION_SECRET;
-    if (existing.NERVE_SESSION_TTL) config.NERVE_SESSION_TTL = existing.NERVE_SESSION_TTL;
+    if (existing.CLAWDASH_AUTH) config.CLAWDASH_AUTH = existing.CLAWDASH_AUTH;
+    if (existing.CLAWDASH_PASSWORD_HASH) config.CLAWDASH_PASSWORD_HASH = existing.CLAWDASH_PASSWORD_HASH;
+    if (existing.CLAWDASH_SESSION_SECRET) config.CLAWDASH_SESSION_SECRET = existing.CLAWDASH_SESSION_SECRET;
+    if (existing.CLAWDASH_SESSION_TTL) config.CLAWDASH_SESSION_TTL = existing.CLAWDASH_SESSION_TTL;
   }
 
   // ── 5/6: TTS ─────────────────────────────────────────────────────
@@ -963,9 +963,9 @@ function printSummary(config: EnvConfig): void {
   }
 
   const hostLabel = host === '127.0.0.1' ? '127.0.0.1 (local only)' : `${host} (network)`;
-  const authLabel = config.NERVE_AUTH === 'true' ? '🔒 Enabled' : 'Disabled';
+  const authLabel = config.CLAWDASH_AUTH === 'true' ? '🔒 Enabled' : 'Disabled';
 
-  if (process.env.NERVE_INSTALLER) {
+  if (process.env.CLAWDASH_INSTALLER) {
     // Rail-style summary — stays inside the installer's visual flow
     const r = `  \x1b[2m│\x1b[0m`;
     console.log('');
@@ -1073,9 +1073,9 @@ async function runCheck(config: EnvConfig): Promise<void> {
   }
 
   // Auth
-  if (config.NERVE_AUTH === 'true') {
+  if (config.CLAWDASH_AUTH === 'true') {
     success('Authentication is enabled');
-    if (config.NERVE_PASSWORD_HASH) {
+    if (config.CLAWDASH_PASSWORD_HASH) {
       success('Password hash is set');
     } else if (config.GATEWAY_TOKEN) {
       info('No password hash — gateway token will be used as fallback');
@@ -1083,10 +1083,10 @@ async function runCheck(config: EnvConfig): Promise<void> {
       fail('Auth is enabled but no password hash or gateway token is configured');
       errors++;
     }
-    if (config.NERVE_SESSION_SECRET) {
+    if (config.CLAWDASH_SESSION_SECRET) {
       success('Session secret is set');
     } else {
-      warn('NERVE_SESSION_SECRET not set — will be auto-generated (sessions won\'t survive restarts)');
+      warn('CLAWDASH_SESSION_SECRET not set — will be auto-generated (sessions won\'t survive restarts)');
     }
   } else if (host === '0.0.0.0') {
     warn('Authentication is DISABLED while server is network-exposed');
@@ -1190,12 +1190,12 @@ async function runDefaults(existing: EnvConfig, prereqs: PrereqResult): Promise<
   }
 
   // Auth: auto-enable when network-exposed with gateway token, generate session secret
-  if (!config.NERVE_SESSION_SECRET) {
-    config.NERVE_SESSION_SECRET = randomBytes(32).toString('hex');
+  if (!config.CLAWDASH_SESSION_SECRET) {
+    config.CLAWDASH_SESSION_SECRET = randomBytes(32).toString('hex');
   }
-  if (config.HOST === '0.0.0.0' && !config.NERVE_AUTH) {
+  if (config.HOST === '0.0.0.0' && !config.CLAWDASH_AUTH) {
     if (config.GATEWAY_TOKEN) {
-      config.NERVE_AUTH = 'true';
+      config.CLAWDASH_AUTH = 'true';
       success('Authentication auto-enabled (gateway token can be used as password)');
     } else {
       warn('Network-exposed without authentication — consider running interactive setup');

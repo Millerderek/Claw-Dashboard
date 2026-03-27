@@ -308,7 +308,7 @@ export default function App({ onLogout }: AppProps) {
   // View mode state (chat | kanban), persisted to localStorage
   const [viewMode, setViewModeRaw] = useState<ViewMode>(() => {
     try {
-      const saved = localStorage.getItem('nerve:viewMode');
+      const saved = localStorage.getItem('clawdash:viewMode');
       if (saved === 'kanban') return 'kanban';
     } catch { /* ignore */ }
     return 'chat';
@@ -321,7 +321,7 @@ export default function App({ onLogout }: AppProps) {
       setFileBrowserCollapsed(true);
     }
 
-    try { localStorage.setItem('nerve:viewMode', mode); } catch { /* ignore */ }
+    try { localStorage.setItem('clawdash:viewMode', mode); } catch { /* ignore */ }
   }, [isCompactLayout, setFileBrowserCollapsed]);
   const openTaskInBoard = useCallback((taskId: string) => {
     setPendingTaskId(taskId);

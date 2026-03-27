@@ -16,7 +16,7 @@ describe('device-identity', () => {
 
   beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nerve-test-identity-'));
-    process.env.NERVE_DATA_DIR = tmpDir;
+    process.env.CLAWDASH_DATA_DIR = tmpDir;
 
     vi.resetModules();
     const mod = await import('./device-identity.js');
@@ -82,7 +82,7 @@ describe('device-identity', () => {
       logSpy.mockRestore();
 
       vi.resetModules();
-      process.env.NERVE_DATA_DIR = tmpDir;
+      process.env.CLAWDASH_DATA_DIR = tmpDir;
       const freshMod = await import('./device-identity.js');
 
       const logSpy2 = vi.spyOn(console, 'log').mockImplementation(() => {});

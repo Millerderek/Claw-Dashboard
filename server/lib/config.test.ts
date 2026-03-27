@@ -40,7 +40,7 @@ describe('config module', () => {
 
     it('defaults auth to false', async () => {
       const { config } = await import('./config.js');
-      if (!process.env.NERVE_AUTH || process.env.NERVE_AUTH !== 'true') {
+      if (!process.env.CLAWDASH_AUTH || process.env.CLAWDASH_AUTH !== 'true') {
         expect(config.auth).toBe(false);
       }
     });
@@ -132,7 +132,7 @@ describe('config module', () => {
       expect(logSpy).toHaveBeenCalled();
       const allOutput = logSpy.mock.calls.map(c => c.join(' ')).join('\n');
       expect(allOutput).toContain('1.2.3');
-      expect(allOutput).toContain('Nerve');
+      expect(allOutput).toContain('ClawDash');
       logSpy.mockRestore();
       warnSpy.mockRestore();
     });
@@ -221,8 +221,8 @@ describe('config module', () => {
     it('exits when HOST=0.0.0.0 and auth is disabled', async () => {
       vi.resetModules();
       process.env.HOST = '0.0.0.0';
-      process.env.NERVE_AUTH = 'false';
-      delete process.env.NERVE_ALLOW_INSECURE;
+      process.env.CLAWDASH_AUTH = 'false';
+      delete process.env.CLAWDASH_ALLOW_INSECURE;
 
       const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -237,11 +237,11 @@ describe('config module', () => {
       warnSpy.mockRestore();
     });
 
-    it('warns but does not exit when NERVE_ALLOW_INSECURE=true', async () => {
+    it('warns but does not exit when CLAWDASH_ALLOW_INSECURE=true', async () => {
       vi.resetModules();
       process.env.HOST = '0.0.0.0';
-      process.env.NERVE_AUTH = 'false';
-      process.env.NERVE_ALLOW_INSECURE = 'true';
+      process.env.CLAWDASH_AUTH = 'false';
+      process.env.CLAWDASH_ALLOW_INSECURE = 'true';
 
       const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});

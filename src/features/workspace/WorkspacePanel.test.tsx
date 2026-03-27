@@ -58,7 +58,7 @@ describe('WorkspacePanel', () => {
     expect(configTabRenderLog).toEqual([]);
 
     localStorage.removeItem('nerve-config-view');
-    localStorage.setItem('nerve:workspace:bravo:config-view', 'files');
+    localStorage.setItem('clawdash:workspace:bravo:config-view', 'files');
 
     rerender(<WorkspacePanel {...props} workspaceAgentId="bravo" />);
 

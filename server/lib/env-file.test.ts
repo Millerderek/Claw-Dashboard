@@ -49,13 +49,13 @@ describe('writeEnvKey', () => {
     await Promise.all([
       writeEnvKey('OPENAI_API_KEY', 'new', envPath),
       writeEnvKey('REPLICATE_API_TOKEN', 'r8_xxx', envPath),
-      writeEnvKey('NERVE_LANGUAGE', 'tr', envPath),
+      writeEnvKey('CLAWDASH_LANGUAGE', 'tr', envPath),
     ]);
 
     const final = fs.readFileSync(envPath, 'utf8');
     expect(final).toContain('OPENAI_API_KEY=new\n');
     expect(final).toContain('REPLICATE_API_TOKEN=r8_xxx\n');
-    expect(final).toContain('NERVE_LANGUAGE=tr\n');
+    expect(final).toContain('CLAWDASH_LANGUAGE=tr\n');
 
     fs.rmSync(dir, { recursive: true, force: true });
   });
