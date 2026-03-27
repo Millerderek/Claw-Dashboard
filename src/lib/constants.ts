@@ -1,5 +1,5 @@
 /**
- * constants.ts — Shared constants for the Nerve client.
+ * constants.ts — Shared constants for the ClawDash client.
  *
  * Includes attachment limits, wake/stop phrases, model context-window
  * sizes, and context-usage warning thresholds.

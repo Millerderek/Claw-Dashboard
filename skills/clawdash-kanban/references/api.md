@@ -1,4 +1,4 @@
-# Nerve Kanban API Reference
+# ClawDash Kanban API Reference
 
 All paths relative to server origin. Content-Type: `application/json` for all request bodies.
 

@@ -19,8 +19,8 @@ vi.mock('@/components/ui/button', () => ({
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
 }));
 
-vi.mock('@/components/NerveLogo', () => ({
-  default: () => <div>NerveLogo</div>,
+vi.mock('@/components/ClawDashLogo', () => ({
+  default: () => <div>ClawDashLogo</div>,
 }));
 
 describe('ConnectDialog', () => {

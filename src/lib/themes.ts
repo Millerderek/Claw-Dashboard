@@ -1,4 +1,4 @@
-// Theme definitions for Nerve UI
+// Theme definitions for ClawDash UI
 
 export type ThemeName =
   | 'midnight'
